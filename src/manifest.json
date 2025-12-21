@@ -1,0 +1,21 @@
+{
+  "name": "EduConnect - Plateforme de Collaboration Académique",
+  "short_name": "EduConnect",
+  "description": "Plateforme moderne de collaboration académique pour étudiants et enseignants",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563EB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/educonnect-logo.png",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "social"],
+  "lang": "fr",
+  "dir": "ltr"
+}

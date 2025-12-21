@@ -1,0 +1,158 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate, useParams } from "react-router-dom";
+import { db } from "../config/firebase";
+import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Badge } from "../components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { motion } from "motion/react";
+import { 
+  ArrowLeft, 
+  Mail, 
+  Shield, 
+  Award, 
+  TrendingUp, 
+  Calendar,
+  MessageSquare,
+  BookOpen,
+  HelpCircle,
+  MapPin,
+  CheckCircle,
+  Ban,
+  User,
+  Crown,
+  Heart,
+  MessageCircle,
+  Users,
+  Clock,
+  ThumbsUp,
+  Target,
+  Activity,
+  Zap,
+  Trash2,
+  Eye,
+  Hash,
+  Lock,
+  Globe,
+  Image as ImageIcon
+} from "lucide-react";
+import { toast } from "sonner@2.0.3";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+
+interface UserData {
+  uid: string;
+  name: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string;
+  department?: string;
+  location?: string;
+  interests?: string[];
+  level: number;
+  score: number;
+  admin?: boolean;
+  banned?: boolean;
+  createdAt?: any;
+}
+
+interface Post {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorProfilePicture?: string;
+  authorDepartment?: string;
+  content: string;
+  createdAt: any;
+  likesCount: number;
+  commentsCount: number;
+  hashtags?: string[];
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
+  isGroupPost?: boolean;
+  groupId?: string;
+  groupName?: string;
+}
+
+interface Group {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  memberCount: number;
+  admin: string;
+  adminName: string;
+  imageUrl?: string;
+  coverImageUrl?: string;
+  location?: string;
+  banned?: boolean;
+  members: string[];
+  isPrivate?: boolean;
+  createdAt?: any;
+}
+
+interface Question {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorProfilePicture?: string;
+  title: string;
+  content: string;
+  subject: string;
+  tags: string[];
+  createdAt: any;
+  votesCount: number;
+  answersCount: number;
+  upvotedBy?: string[];
+  downvotedBy?: string[];
+}
+
+interface Session {
+  id: string;
+  createdBy: string;
+  createdByName: string;
+  createdByProfilePicture?: string;
+  title: string;
+  description: string;
+  type: string;
+  category?: string;
+  startDate: any;
+  endDate: any;
+  location?: string;
+  participantCount: number;
+  participants?: string[];
+  isRecurring?: boolean;
+  recurrencePattern?: string;
+}
+
+export default function AdminUserDetailPage() {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: string; id: string; name: string; action?: 'delete' | 'ban' }>({
+    open: false,
+    type: "",
+    id: "",
+    name: "",
+    action: 'delete',
+  });
